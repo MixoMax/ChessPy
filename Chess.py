@@ -236,7 +236,7 @@ class Rock(Pawn):
             hits.remove((x, y))
         moves, hits = filter_moves(moves, hits, self.color)
         return moves, hits
-        
+   
 class Knight(Pawn):
     def __init__(self, x_pos, y_pos, color) -> None:
         super().__init__(x_pos, y_pos, color)
@@ -276,7 +276,9 @@ class Bishop(Pawn):
             pos = (x+i, y+i)
             if pos[0] > 7 or pos[0] < 0 or pos[1] > 7 or pos[1] < 0:
                 continue
-            if field.fields[x+i][y+i] != None:
+            if str(field.fields[x+i][y+i]).startswith(self.color):
+                break
+            elif field.fields[x+i][y+i] != None:
                 hits.append(pos)
                 break
             else:
@@ -284,7 +286,9 @@ class Bishop(Pawn):
         for i in range(1, 8):
             pos = (x+i, y-i)
             try:
-                if field.fields[x+i][y-i] != None:
+                if str(field.fields[x+i][y-i]).startswith(self.color):
+                    break
+                elif field.fields[x+i][y-i] != None:
                     hits.append(pos)
                     break
                 else:
@@ -294,7 +298,9 @@ class Bishop(Pawn):
         for i in range(1, 8):
             pos = (x-i, y+i)
             try:
-                if field.fields[x-i][y+i] != None:
+                if str(field.fields[x-i][y+i]).startswith(self.color):
+                    break
+                elif field.fields[x-i][y+i] != None:
                     hits.append(pos)
                     break
                 else:
@@ -303,7 +309,9 @@ class Bishop(Pawn):
                 pass
         for i in range(1, 8):
             pos = (x-i, y-i)
-            if field.fields[x-i][y-i] != None:
+            if str(field.fields[x-i][y-i]).startswith(self.color):
+                break
+            elif field.fields[x-i][y-i] != None:
                 hits.append(pos)
                 break
             else:
@@ -317,6 +325,7 @@ class Bishop(Pawn):
         moves, hits = filter_moves(moves, hits, self.color)
         return moves, hits
 
+    
 class Queen(Pawn):
     def __init__(self, x_pos, y_pos, color) -> None:
         super().__init__(x_pos, y_pos, color)
