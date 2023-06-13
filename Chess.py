@@ -10,6 +10,7 @@ class Field():
         self.fields = [[None for i in range(8)] for j in range(8)]
         self._init_pawns()
         self.last_clicked = None
+        self.last_moved = None
     
     def _init_pawns(self):
         pawn_positions = [
@@ -58,16 +59,28 @@ class Field():
             print(p, "clicked at", x, y)
             if self.last_clicked is not None:
                 if (x,y) in self.last_clicked.possible_moves()[0]:
+                    try:
+                        if p.color == self.last_clicked.color:
+                            return None
+                    except:
+                        pass
                     self.fields[x][y] = self.last_clicked
                     self.fields[self.last_clicked.x_pos][self.last_clicked.y_pos] = None
                     self.last_clicked.x_pos = x
                     self.last_clicked.y_pos = y
+                    self.last_moved = self.last_clicked.color
                     self.last_clicked = None
                 elif (x,y) in self.last_clicked.possible_moves()[1]:
+                    try:
+                        if p.color == self.last_clicked.color:
+                            return None
+                    except:
+                        pass
                     self.fields[x][y] = self.last_clicked
                     self.fields[self.last_clicked.x_pos][self.last_clicked.y_pos] = None
                     self.last_clicked.x_pos = x
                     self.last_clicked.y_pos = y
+                    self.last_moved = self.last_clicked.color
                     self.last_clicked = None
             if p is not None:
                 p.highlight_moves(screen)
@@ -266,18 +279,24 @@ class Bishop(Pawn):
                 moves.append(pos)
         for i in range(1, 8):
             pos = (x+i, y-i)
-            if field.fields[x+i][y-i] != None:
-                hits.append(pos)
-                break
-            else:
-                moves.append(pos)
+            try:
+                if field.fields[x+i][y-i] != None:
+                    hits.append(pos)
+                    break
+                else:
+                    moves.append(pos)
+            except IndexError:
+                pass
         for i in range(1, 8):
             pos = (x-i, y+i)
-            if field.fields[x-i][y+i] != None:
-                hits.append(pos)
-                break
-            else:
-                moves.append(pos)
+            try:
+                if field.fields[x-i][y+i] != None:
+                    hits.append(pos)
+                    break
+                else:
+                    moves.append(pos)
+            except IndexError:
+                pass
         for i in range(1, 8):
             pos = (x-i, y-i)
             if field.fields[x-i][y-i] != None:
@@ -338,11 +357,14 @@ class Queen(Pawn):
                 continue
         for i in range(1, 8):
             pos = (x-i, y+i)
-            if field.fields[x-i][y+i] != None:
-                hits.append(pos)
-                break
-            else:
-                moves.append(pos)
+            try:
+                if field.fields[x-i][y+i] != None:
+                    hits.append(pos)
+                    break
+                else:
+                    moves.append(pos)
+            except:
+                pass
         for i in range(1, 8):
             pos = (x-i, y-i)
             if field.fields[x-i][y-i] != None:
