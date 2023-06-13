@@ -85,13 +85,22 @@ class Field():
 
 def filter_moves(moves: list, hits: list, color: str):
     for move in moves:
-        if move[0] < 0 or move[0] > 7 or move[1] < 0 or move[1] > 7:
+        x, y = move
+        try:
+            f = field.fields[x][y]
+        except IndexError:
             moves.remove(move)
+            continue
     for hit in hits:
-        if field.fields[hit[0]][hit[1]].color == color:
+        x, y = hit
+        try:
+            f = field.fields[x][y]
+            if f.color == color:
+                hits.remove(hit)
+                continue
+        except IndexError:
             hits.remove(hit)
-        elif hit[0] < 0 or hit[0] > 7 or hit[1] < 0 or hit[1] > 7:
-            hits.remove(hit)
+            continue
     return moves, hits
 
 
@@ -319,11 +328,14 @@ class Queen(Pawn):
                 moves.append(pos)
         for i in range(1, 8):
             pos = (x+i, y-i)
-            if field.fields[x+i][y-i] != None:
-                hits.append(pos)
-                break
-            else:
-                moves.append(pos)
+            try:
+                if field.fields[x+i][y-i] != None:
+                    hits.append(pos)
+                    break
+                else:
+                    moves.append(pos)
+            except:
+                continue
         for i in range(1, 8):
             pos = (x-i, y+i)
             if field.fields[x-i][y+i] != None:
