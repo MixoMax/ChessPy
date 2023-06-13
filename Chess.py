@@ -144,9 +144,11 @@ class Pawn():
     def _posible_moves_white(self):
         x, y = self.x_pos, self.y_pos
         hits = []
-        moves = [(x, y+1)]
+        moves = []
+        if field.fields[x][y+1] == None:
+            moves.append((x, y+1))
         try:
-            if y == 1:
+            if y == 1 and field.fields[x][y+1] == None and field.fields[x][y+2] == None:
                 moves.append((x, y+2))
             if field.fields[x+1][y+1] != None:
                 if field.fields[x+1][y+1].color != self.color:
@@ -168,9 +170,11 @@ class Pawn():
     def _posible_moves_black(self):
         x, y = self.x_pos, self.y_pos
         hits = []
-        moves = [(x, y-1)]
+        moves = []
+        if field.fields[x][y-1] == None:
+            moves.append((x, y-1))
         try:
-            if y == 6:
+            if y == 6 and field.fields[x][y-1] == None and field.fields[x][y-2] == None:
                 moves.append((x, y-2))
             if field.fields[x+1][y-1] != None:
                 if field.fields[x+1][y-1].color != self.color:
