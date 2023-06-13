@@ -137,11 +137,11 @@ class Pawn():
     
     def possible_moves(self):
         if self.color == "white":
-            return self._posible_moves_white()
+            return self._possible_moves_white()
         else:
-            return self._posible_moves_black()
+            return self._possible_moves_black()
     
-    def _posible_moves_white(self):
+    def _possible_moves_white(self):
         x, y = self.x_pos, self.y_pos
         hits = []
         moves = []
@@ -167,7 +167,7 @@ class Pawn():
         moves, hits = filter_moves(moves, hits, self.color)
         return moves, hits
     
-    def _posible_moves_black(self):
+    def _possible_moves_black(self):
         x, y = self.x_pos, self.y_pos
         hits = []
         moves = []
