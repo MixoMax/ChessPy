@@ -117,15 +117,13 @@ def filter_moves(moves: list, hits: list, color: str):
     return moves, hits
 
 
-class Pawn():
+class BasePiece():
     def __init__(self, x_pos, y_pos, color) -> None:
         self.x_pos = x_pos
         self.y_pos = y_pos
         self.image = None
         self.color = color
-        self.points = 1
-        if self.__class__ == Pawn:
-            self._load_image("assets/pawn.png")
+        self.points = 0
     
     def draw(self, screen):
         img_pos = (self.x_pos * 100, self.y_pos * 100)
@@ -134,6 +132,30 @@ class Pawn():
     def _load_image(self, image):
         self.image = pygame.image.load(image)
         self.image = pygame.transform.scale(self.image, (100, 100))
+    
+    def possible_moves(self):
+        pass
+    
+    def highlight_moves(self, screen):
+        moves, hits = self.possible_moves()
+        for move in moves:
+            pygame.draw.rect(screen, (0, 255, 0), (move[0] * 100, move[1] * 100, 100, 100))
+        for hit in hits:
+            pygame.draw.rect(screen, (255, 0, 0), (hit[0] * 100, hit[1] * 100, 100, 100))
+
+    def __str__(self) -> str:
+        return f"{self.color} {self.__class__.__name__}"
+    
+    
+    
+    
+    
+
+class Pawn(BasePiece):
+    def __init__(self, x_pos, y_pos, color) -> None:
+        super().__init__(x_pos, y_pos, color)
+        self._load_image("assets/pawn.png")
+        self.points = 1
     
     def possible_moves(self):
         if self.color == "white":
@@ -192,52 +214,14 @@ class Pawn():
             hits.remove((x, y))
         moves, hits = filter_moves(moves, hits, self.color)
         return moves, hits
-    
-                    
-    
-    def highlight_moves(self, screen):
-        moves, hits = self.possible_moves()
-        for move in moves:
-            pygame.draw.rect(screen, (0, 255, 0), (move[0] * 100, move[1] * 100, 100, 100))
-        for hit in hits:
-            pygame.draw.rect(screen, (255, 0, 0), (hit[0] * 100, hit[1] * 100, 100, 100))
-
-    def __str__(self) -> str:
-        return f"{self.color} {self.__class__.__name__}"
             
-class Rock(Pawn):
+class Rock(BasePiece):
     def __init__(self, x_pos, y_pos, color) -> None:
         super().__init__(x_pos, y_pos, color)
         self.points = 5
         self._load_image("assets/rock.png")
-    
-    def possible_moves(self):
-        x, y = self.x_pos, self.y_pos
-        moves, hits = [], []
-        for i in range(1, 8):
-            pos = (x, i)
-            if field.fields[x][i] != None:
-                hits.append(pos)
-                break
-            else:
-                moves.append(pos)
-        for i in range(1, 8):
-            pos = (i, y)
-            if field.fields[i][y] != None:
-                hits.append(pos)
-                break
-            else:
-                moves.append(pos)
-        moves = list(set(moves))
-        hits = list(set(hits))
-        if (x, y) in moves:
-            moves.remove((x, y))
-        if (x, y) in hits:
-            hits.remove((x, y))
-        moves, hits = filter_moves(moves, hits, self.color)
-        return moves, hits
-   
-class Knight(Pawn):
+
+class Knight(BasePiece):
     def __init__(self, x_pos, y_pos, color) -> None:
         super().__init__(x_pos, y_pos, color)
         self.points = 3
@@ -263,7 +247,7 @@ class Knight(Pawn):
         moves, hits = filter_moves(moves, hits, self.color)
         return moves, hits
 
-class Bishop(Pawn):
+class Bishop(BasePiece):
     def __init__(self, x_pos, y_pos, color) -> None:
         super().__init__(x_pos, y_pos, color)
         self.points = 3
@@ -324,9 +308,8 @@ class Bishop(Pawn):
             hits.remove((x, y))
         moves, hits = filter_moves(moves, hits, self.color)
         return moves, hits
-
-    
-class Queen(Pawn):
+ 
+class Queen(BasePiece):
     def __init__(self, x_pos, y_pos, color) -> None:
         super().__init__(x_pos, y_pos, color)
         self.points = 9
@@ -394,7 +377,7 @@ class Queen(Pawn):
         moves, hits = filter_moves(moves, hits, self.color)
         return moves, hits
 
-class King(Pawn):
+class King(BasePiece):
     def __init__(self, x_pos, y_pos, color) -> None:
         super().__init__(x_pos, y_pos, color)
         self.points = float("inf")
