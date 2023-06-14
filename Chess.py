@@ -2,6 +2,7 @@ import math
 import pygame
 import sys
 import time
+import PIL.Image
 
 global field
 
@@ -130,8 +131,37 @@ class BasePiece():
         screen.blit(self.image, img_pos)
     
     def _load_image(self, image):
-        self.image = pygame.image.load(image)
+        img = PIL.Image.open(image)
+        
+        WHITE = (255, 255, 255)
+        BLACK = (49, 52, 57)
+        
+        # Make WHITE transparent
+        img = img.convert("RGBA")
+        data = img.getdata()
+        new_data = []
+        for item in data:
+            if item[:3] == WHITE:
+                new_data.append((255, 255, 255, 0))  # Set white pixels to transparent
+            else:
+                new_data.append(item)
+        img.putdata(new_data)
+        
+        if self.color == "white":
+            # Convert all BLACK pixels to WHITE
+            data = img.getdata()
+            new_data = []
+            for item in data:
+                if item[:3] == BLACK:
+                    new_data.append(WHITE)
+                else:
+                    new_data.append(item)
+            img.putdata(new_data)
+        
+        self.image = pygame.image.fromstring(img.tobytes(), img.size, img.mode)
         self.image = pygame.transform.scale(self.image, (100, 100))
+            
+        
     
     def possible_moves(self):
         pass
