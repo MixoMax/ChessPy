@@ -12,6 +12,9 @@ class Field():
         self._init_pawns()
         self.last_clicked = None
         self.last_moved = None
+        self._load_image("assets/Board.png")
+        self.check_turns_white = 0
+        self.check_turns_black = 0
     
     def _init_pawns(self):
         pawn_positions = [
@@ -43,13 +46,30 @@ class Field():
             x, y = position
             self.fields[x][y] = piece_type(x, y, color)
     
+    def _load_image(self, image):
+        self.image = pygame.image.load(image)
+    
     def draw(self, screen):
-        pygame.draw.rect(screen, (255, 255, 255), (0, 0, 800, 800))
+        screen.blit(self.image, (0,0))
         for i in range(8):
             for j in range(8):
                 if self.fields[i][j] is not None:
                     #print(self.fields[i][j], "drawn at", i, j)
                     self.fields[i][j].draw(screen)
+                    if isinstance(self.fields[i][j], King):
+                        if self.fields[i][j].check() == True:
+                            if self.fields[i][j].color == "white":
+                                self.check_turns_white += 1
+                                if self.check_turns_white == 1:
+                                    print("White is in check!")
+                                elif self.check_turns_white > 1:
+                                    print("White is in checkmate!")
+                            elif self.fields[i][j].color == "black":
+                                self.check_turns_black += 1
+                                if self.check_turns_black == 1:
+                                    print("Black is in check!")
+                                elif self.check_turns_black > 1:
+                                    print("Black is in checkmate!")
     
     def click(self, mouse_pos):
         self.draw(screen)
@@ -87,6 +107,9 @@ class Field():
                 p.highlight_moves(screen)
                 self.last_clicked = p
         
+        if p is None and self.last_clicked is not None:
+            self.last_clicked = None
+        
         if isinstance(p, Pawn):
             color = p.color
             # check if pawn is at the end of the field
@@ -115,6 +138,7 @@ def filter_moves(moves: list, hits: list, color: str):
         except IndexError:
             hits.remove(hit)
             continue
+    
     return moves, hits
 
 
@@ -131,34 +155,9 @@ class BasePiece():
         screen.blit(self.image, img_pos)
     
     def _load_image(self, image):
-        img = PIL.Image.open(image)
-        
-        WHITE = (255, 255, 255)
-        BLACK = (49, 52, 57)
-        
-        # Make WHITE transparent
-        img = img.convert("RGBA")
-        data = img.getdata()
-        new_data = []
-        for item in data:
-            if item[:3] == WHITE:
-                new_data.append((255, 255, 255, 0))  # Set white pixels to transparent
-            else:
-                new_data.append(item)
-        img.putdata(new_data)
-        
         if self.color == "white":
-            # Convert all BLACK pixels to WHITE
-            data = img.getdata()
-            new_data = []
-            for item in data:
-                if item[:3] == BLACK:
-                    new_data.append(WHITE)
-                else:
-                    new_data.append(item)
-            img.putdata(new_data)
-        
-        self.image = pygame.image.fromstring(img.tobytes(), img.size, img.mode)
+            image = image.replace(".png", "_w.png")
+        self.image = pygame.image.load(image)
         self.image = pygame.transform.scale(self.image, (100, 100))
             
         
@@ -169,17 +168,19 @@ class BasePiece():
     def highlight_moves(self, screen):
         moves, hits = self.possible_moves()
         for move in moves:
-            pygame.draw.rect(screen, (0, 255, 0), (move[0] * 100, move[1] * 100, 100, 100))
+            rect_surface = pygame.Surface((100, 100), pygame.SRCALPHA)
+            color = (0, 255, 0, 128)  # Set alpha value to 128 for transparency
+            rect_surface.fill(color)
+            screen.blit(rect_surface, (move[0] * 100, move[1] * 100))
         for hit in hits:
-            pygame.draw.rect(screen, (255, 0, 0), (hit[0] * 100, hit[1] * 100, 100, 100))
+            rect_surface = pygame.Surface((100, 100), pygame.SRCALPHA)
+            color = (255, 0, 0, 128)  # Set alpha value to 128 for transparency
+            rect_surface.fill(color)
+            screen.blit(rect_surface, (hit[0] * 100, hit[1] * 100))
 
     def __str__(self) -> str:
         return f"{self.color} {self.__class__.__name__}"
-    
-    
-    
-    
-    
+
 
 class Pawn(BasePiece):
     def __init__(self, x_pos, y_pos, color) -> None:
@@ -197,9 +198,9 @@ class Pawn(BasePiece):
         x, y = self.x_pos, self.y_pos
         hits = []
         moves = []
-        if field.fields[x][y+1] == None:
-            moves.append((x, y+1))
         try:
+            if field.fields[x][y+1] == None:
+                moves.append((x, y+1))
             if y == 1 and field.fields[x][y+1] == None and field.fields[x][y+2] == None:
                 moves.append((x, y+2))
             if field.fields[x+1][y+1] != None:
@@ -223,9 +224,9 @@ class Pawn(BasePiece):
         x, y = self.x_pos, self.y_pos
         hits = []
         moves = []
-        if field.fields[x][y-1] == None:
-            moves.append((x, y-1))
         try:
+            if field.fields[x][y-1] == None:
+                moves.append((x, y-1))
             if y == 6 and field.fields[x][y-1] == None and field.fields[x][y-2] == None:
                 moves.append((x, y-2))
             if field.fields[x+1][y-1] != None:
@@ -250,6 +251,42 @@ class Rock(BasePiece):
         super().__init__(x_pos, y_pos, color)
         self.points = 5
         self._load_image("assets/rock.png")
+    
+    def possible_moves(self):
+        x, y = self.x_pos, self.y_pos
+        moves = []
+        hits = []
+
+        def check_field(x, y):
+            if field.fields[x][y] is None:
+                moves.append((x, y))
+            elif field.fields[x][y].color != self.color:
+                hits.append((x, y))
+                return True
+            else:
+                return True
+
+        for i in range(x + 1, 8):
+            if check_field(i, y):
+                break
+
+        for i in range(x - 1, -1, -1):
+            if check_field(i, y):
+                break
+
+        for i in range(y + 1, 8):
+            if check_field(x, i):
+                break
+
+        for i in range(y - 1, -1, -1):
+            if check_field(x, i):
+                break
+
+        moves = list(set(moves))
+        hits = list(set(hits))
+
+        moves, hits = filter_moves(moves, hits, self.color)
+        return moves, hits
 
 class Knight(BasePiece):
     def __init__(self, x_pos, y_pos, color) -> None:
@@ -434,10 +471,14 @@ class King(BasePiece):
         return moves, hits
     
     def check(self):
-        for pawn in field.pawns:
-            if pawn.color != self.color:
-                if (self.x_pos, self.y_pos) in pawn.possible_moves()[1]:
-                    return True
+        x, y = self.x_pos, self.y_pos
+        for i in range(8):
+            for j in range(8):
+                if field.fields[i][j] != None and field.fields[i][j].color != self.color:
+                    hits = field.fields[i][j].possible_moves()[1]
+                    if hits != []:
+                        if (x, y) in hits:
+                            return True
         return False
 
 screen = pygame.display.set_mode((800, 800))
@@ -456,7 +497,6 @@ while True:
     click_pos = pygame.mouse.get_pos()
     if pygame.mouse.get_pressed()[0]:
         field.click(click_pos)
-    
-    
+        
     clock.tick(60)
     pygame.display.update()
